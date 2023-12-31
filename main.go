@@ -18,7 +18,7 @@ func main() {
 
 func run() error {
 	var (
-		sockAddr             = flag.String("uds-path", "/socket/uds.sock", "path to the uds")
+		sockAddr             = flag.String("uds-path", "/csi/csi.sock", "path to the uds")
 		keycloakTimeout      = flag.Duration("keycloak-timeout", time.Second*10, "timeout for requests to Keycloak")
 		keycloakURL          = flag.String("keycloak-url", "", "URL of the Keycloak instance")
 		keycloakRealm        = flag.String("keycloak-realm", "master", "Keycloak realm")
