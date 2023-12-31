@@ -20,29 +20,29 @@ import (
 )
 
 type Keycloak struct {
-	client                             *http.Client
-	url, realm, username, passwordPath string
+	client                                 *http.Client
+	url, realm, clientID, clientSecretPath string
 
 	tokenLock      sync.Mutex
 	accessToken    string
 	accessTokenExp time.Time
 }
 
-func NewKeycloak(url, realm, username, passwordPath string, timeout time.Duration) (*Keycloak, error) {
+func NewKeycloak(url, realm, clientID, secretPath string, timeout time.Duration) (*Keycloak, error) {
 	if url == "" {
 		return nil, errors.New("keycloak URL is required")
 	}
-	if username == "" {
-		return nil, errors.New("keycloak username is required")
+	if clientID == "" {
+		return nil, errors.New("keycloak clientID is required")
 	}
-	if _, err := os.Stat(passwordPath); err != nil {
-		return nil, errors.New("keycloak password file does not exist")
+	if _, err := os.Stat(secretPath); err != nil {
+		return nil, errors.New("keycloak client secret file does not exist")
 	}
 	return &Keycloak{
-		url:          url,
-		realm:        realm,
-		username:     username,
-		passwordPath: passwordPath,
+		url:              url,
+		realm:            realm,
+		clientID:         clientID,
+		clientSecretPath: secretPath,
 		client: &http.Client{
 			Timeout:   timeout,
 			Transport: &http.Transport{},
@@ -149,17 +149,16 @@ func (k *Keycloak) getAccessToken(ctx context.Context) (string, error) {
 }
 
 func (k *Keycloak) refreshAccessTokenUnlocked(ctx context.Context) error {
-	passwordBytes, err := os.ReadFile(k.passwordPath)
+	passwordBytes, err := os.ReadFile(k.clientSecretPath)
 	if err != nil {
 		return err
 	}
 	password := strings.TrimSpace(string(passwordBytes))
 
 	q := url.Values{}
-	q.Add("grant_type", "password")
-	q.Add("username", k.username)
-	q.Add("password", string(password))
-	q.Add("client_id", "admin-cli")
+	q.Add("grant_type", "client_credentials")
+	q.Add("client_id", k.clientID)
+	q.Add("client_secret", string(password))
 	url := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", k.url, k.realm)
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBufferString(q.Encode()))
 	if err != nil {

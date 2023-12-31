@@ -18,12 +18,12 @@ func main() {
 
 func run() error {
 	var (
-		sockAddr             = flag.String("uds-path", "/csi/csi.sock", "path to the uds")
-		keycloakTimeout      = flag.Duration("keycloak-timeout", time.Second*10, "timeout for requests to Keycloak")
-		keycloakURL          = flag.String("keycloak-url", "", "URL of the Keycloak instance")
-		keycloakRealm        = flag.String("keycloak-realm", "master", "Keycloak realm")
-		keycloakUsername     = flag.String("keycloak-username", "", "Keycloak username")
-		keycloakPasswordFile = flag.String("keycloak-password-path", "/etc/keycloak-password", "Path to a file with --keycloak-username's password")
+		sockAddr                 = flag.String("uds-path", "/csi/csi.sock", "path to the uds")
+		keycloakTimeout          = flag.Duration("keycloak-timeout", time.Second*10, "timeout for requests to Keycloak")
+		keycloakURL              = flag.String("keycloak-url", "", "URL of the Keycloak instance")
+		keycloakRealm            = flag.String("keycloak-realm", "master", "Keycloak realm")
+		keycloakClientID         = flag.String("keycloak-client-id", "k8s-csi-driver", "The controller's identity")
+		keycloakClientSecretFile = flag.String("keycloak-client-secret-file", "/etc/keycloak/password", "Path to a file with --keycloak-client-id's secret")
 	)
 	flag.Parse()
 
@@ -38,7 +38,7 @@ func run() error {
 		return err
 	}
 
-	kc, err := NewKeycloak(*keycloakURL, *keycloakRealm, *keycloakUsername, *keycloakPasswordFile, *keycloakTimeout)
+	kc, err := NewKeycloak(*keycloakURL, *keycloakRealm, *keycloakClientID, *keycloakClientSecretFile, *keycloakTimeout)
 	if err != nil {
 		return err
 	}

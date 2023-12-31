@@ -11,9 +11,19 @@ A CSI driver to expose Keycloak client secrets, intended for providing Keycloak 
 - `--keycloak-password-file`: Path to a file with the corresponding password
 - `NODE_ID`: Set to Kubernetes node name
 
-Example daemonset:
+Example manifest:
 
 ```yaml
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: identity.keycloak.org
+spec:
+  volumeLifecycleModes:
+    - Ephemeral
+
+---
+
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -49,12 +59,6 @@ spec:
           - "--csi-address=/csi/csi.sock"
           - "--kubelet-registration-path=/var/lib/kubelet/plugins/identity.keycloak.org/csi.sock"
           - "--health-port=9809"
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 9090
-          initialDelaySeconds: 5
-          timeoutSeconds: 5
         volumeMounts:
           - name: plugin-dir
             mountPath: /csi
@@ -62,11 +66,9 @@ spec:
             mountPath: /registration
 
       - name: csi-driver
-        image: "ghcr.io/jveski/keycloak-k8s-shim:main-41b56d8" # or latest release tag
+        image: "ghcr.io/jveski/keycloak-k8s-shim:USE_LATEST_RELEASE_TAG"
         args:
           - --keycloak-url=https://your-keycloak-instance
-          - --keycloak-username=admin # or another username
-          - --keycloak-password-path=/etc/keycloak/password
         env:
           - name: NODE_ID
             valueFrom:
@@ -77,5 +79,5 @@ spec:
             mountPath: /csi
           - name: keycloak-password
             readOnly: true
-            mountPath: "/etc/keycloak"
+            mountPath: "/etc/keycloak" # assumes the secret contains the key "password"
 ```
