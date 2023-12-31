@@ -35,6 +35,10 @@ spec:
         - name: keycloak-password
           secret:
             secretName: keycloak-admin
+        - name: mountpoint-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
 
       containers:
       - name: csi-driver-registrar
@@ -53,6 +57,8 @@ spec:
         image: "ghcr.io/jveski/keycloak-k8s-shim:USE_LATEST_RELEASE_TAG"
         args:
           - --keycloak-url=https://your-keycloak-instance
+        securityContext:
+          privileged: true
         env:
           - name: NODE_ID
             valueFrom:
@@ -64,3 +70,6 @@ spec:
           - name: keycloak-password
             readOnly: true
             mountPath: "/etc/keycloak" # assumes the secret contains the key "password"
+          - name: mountpoint-dir
+            mountPath: /var/lib/kubelet/pods
+            mountPropagation: "Bidirectional"
