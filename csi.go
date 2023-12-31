@@ -36,13 +36,13 @@ func (s *Server) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolu
 		return nil, err
 	}
 
-	err = os.MkdirAll(req.TargetPath, 0744)
+	err = os.MkdirAll(req.TargetPath, 0777)
 	if err != nil {
 		log.Printf("error while creating mount dir for volume %q: %s", req.VolumeId, err)
 		return nil, err
 	}
 
-	err = os.WriteFile(path.Join(req.TargetPath, "client-id"), []byte(clientID), 0666)
+	err = os.WriteFile(path.Join(req.TargetPath, "client-id"), []byte(clientID), 0444)
 	if err != nil {
 		log.Printf("error while writing client ID for volume %q: %s", req.VolumeId, err)
 		return nil, fmt.Errorf("writing file: %w", err)
